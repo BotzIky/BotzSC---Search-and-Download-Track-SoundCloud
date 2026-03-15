@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotzSC - Search and download SoundCloud tracks</title>
+<meta name="description" content="BotzSC adalah platform terbaik untuk mencari dan mengunduh lagu dari SoundCloud secara gratis. Temukan jutaan track favorit kamu dengan mudah dan cepat.">
+<meta name="author" content="Riski Yanda">
+<meta name="keywords" content="download soundcloud, unduh lagu soundcloud, soundcloud downloader, mp3 soundcloud, search soundcloud, BotzSC, lagu gratis, musik online">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="BotzSC - Search and download SoundCloud tracks">
+<meta property="og:description" content="Cari dan unduh lagu SoundCloud favoritmu dengan mudah dan gratis bersama BotzSC.">
+<meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/145/145809.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BotzSC - Search and download SoundCloud tracks">
+<meta name="twitter:description" content="Cari dan unduh lagu SoundCloud favoritmu dengan mudah dan gratis.">
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/145/145809.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sc-orange:#ff5500;
+  --sc-orange2:#ff7700;
+  --bg:#0d0d0f;
+  --bg2:#16161a;
+  --bg3:#1e1e24;
+  --card:#1a1a20;
+  --card2:#222228;
+  --border:#2a2a34;
+  --text:#f0f0f5;
+  --text2:#a0a0b0;
+  --text3:#606070;
+  --glow:rgba(255,85,0,0.18);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Rubik',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+#loading-screen{
+  position:fixed;inset:0;z-index:9999;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.7s ease,visibility 0.7s ease;
+}
+#loading-screen.hide{opacity:0;visibility:hidden;pointer-events:none}
+.loading-notes{display:flex;gap:10px;align-items:flex-end;height:80px}
+.note-wrap{animation:noteExplode 2.2s ease-in-out infinite}
+.note-wrap:nth-child(1){animation-delay:0s}
+.note-wrap:nth-child(2){animation-delay:0.18s}
+.note-wrap:nth-child(3){animation-delay:0.36s}
+.note-wrap:nth-child(4){animation-delay:0.54s}
+.note-wrap:nth-child(5){animation-delay:0.72s}
+@keyframes noteExplode{
+  0%{transform:translateY(0) scale(1);opacity:0.4}
+  30%{transform:translateY(-28px) scale(1.4);opacity:1}
+  55%{transform:translateY(-8px) scale(1.1);opacity:0.85}
+  75%{transform:translateY(-40px) scale(0.7);opacity:0.3}
+  100%{transform:translateY(0) scale(1);opacity:0.4}
+}
+.loading-text{margin-top:28px;font-size:1.5rem;font-weight:700;letter-spacing:0.12em;color:var(--sc-orange);animation:fadePulse 1.5s ease-in-out infinite}
+@keyframes fadePulse{0%,100%{opacity:0.5}50%{opacity:1}}
+.loading-sub{margin-top:8px;font-size:0.85rem;color:var(--text2);letter-spacing:0.06em}
+
+header{
+  position:sticky;top:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:62px;
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  overflow:hidden;
+}
+.header-bg-svg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.header-left{display:flex;align-items:center;gap:10px;z-index:1;text-decoration:none}
+.header-logo-img{width:32px;height:32px;border-radius:8px}
+.header-brand{font-size:1.25rem;font-weight:800;color:var(--text);letter-spacing:-0.01em}
+.header-brand span{color:var(--sc-orange)}
+.header-right{z-index:201;position:relative}
+
+.hamburger-btn{
+  background:none;border:none;cursor:pointer;padding:6px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;transition:background 0.2s;
+  position:relative;z-index:201;
+}
+.hamburger-btn:hover{background:var(--bg3)}
+.hamburger-svg line{
+  transform-origin:12px 12px;
+  transition:transform 0.32s cubic-bezier(.4,0,.2,1),opacity 0.32s;
+}
+
+.side-menu{
+  position:fixed;
+  top:62px;
+  right:-280px;
+  height:calc(100% - 62px);
+  width:240px;
+  background:var(--bg2);
+  border-left:1px solid var(--border);
+  z-index:199;
+  transition:right 0.35s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+  box-shadow:-8px 0 40px rgba(0,0,0,0.5);
+}
+.side-menu.open{right:0}
+.side-menu-nav{display:flex;flex-direction:column;padding:12px 0}
+.side-menu-nav a{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 20px;font-size:0.95rem;font-weight:500;color:var(--text2);
+  text-decoration:none;transition:all 0.2s;border-left:3px solid transparent;
+}
+.side-menu-nav a:hover{color:var(--text);background:var(--bg3);border-left-color:var(--sc-orange)}
+
+.side-overlay{
+  position:fixed;
+  top:62px;
+  left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.45);
+  z-index:198;
+  opacity:0;visibility:hidden;
+  transition:all 0.3s;
+  backdrop-filter:blur(2px);
+}
+.side-overlay.open{opacity:1;visibility:visible}
+
+main{padding:28px 14px 48px;max-width:960px;margin:0 auto}
+
+.search-section{margin-bottom:36px;text-align:center}
+.search-hero{margin-bottom:22px}
+.search-hero h1{font-size:2rem;font-weight:800;letter-spacing:-0.02em;line-height:1.15}
+.search-hero h1 span{color:var(--sc-orange)}
+.search-hero p{color:var(--text2);margin-top:8px;font-size:0.95rem}
+
+.search-bar-wrap{
+  display:flex;align-items:center;
+  background:var(--bg3);border:1.5px solid var(--border);
+  border-radius:14px;overflow:hidden;max-width:580px;margin:0 auto;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.search-bar-wrap:focus-within{border-color:var(--sc-orange);box-shadow:0 0 0 3px var(--glow)}
+.search-icon-wrap{padding:0 12px;display:flex;align-items:center;color:var(--text3);flex-shrink:0}
+#search-input{
+  flex:1;min-width:0;background:none;border:none;outline:none;
+  padding:14px 0;font-family:'Rubik',sans-serif;font-size:1rem;color:var(--text);
+}
+#search-input::placeholder{color:var(--text3)}
+#search-btn{
+  background:var(--sc-orange);border:none;cursor:pointer;
+  padding:0 18px;height:50px;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  font-family:'Rubik',sans-serif;font-size:0.88rem;font-weight:600;
+  color:#fff;transition:background 0.2s;flex-shrink:0;white-space:nowrap;
+}
+#search-btn:hover{background:var(--sc-orange2)}
+#search-btn:disabled{opacity:0.6;cursor:not-allowed}
+.search-btn-text{display:inline}
+
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.results-count{font-size:0.85rem;color:var(--text2)}
+.results-count strong{color:var(--sc-orange)}
+
+.cards-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+
+.song-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;transition:transform 0.22s,box-shadow 0.22s,border-color 0.22s;
+  cursor:pointer;display:flex;flex-direction:column;
+}
+.song-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 10px 32px rgba(255,85,0,0.13);
+  border-color:rgba(255,85,0,0.35);
+}
+.card-thumb-wrap{position:relative;overflow:hidden;aspect-ratio:1/1}
+.card-thumb{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}
+.song-card:hover .card-thumb{transform:scale(1.05)}
+.card-thumb-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.72));
+}
+.card-duration{
+  position:absolute;bottom:7px;right:7px;
+  background:rgba(0,0,0,0.75);color:#fff;
+  font-size:0.68rem;font-weight:600;padding:2px 6px;border-radius:4px;
+  backdrop-filter:blur(4px);
+}
+.card-play-count{
+  position:absolute;bottom:7px;left:7px;
+  display:flex;align-items:center;gap:3px;
+  background:rgba(0,0,0,0.65);color:#fff;
+  font-size:0.68rem;padding:2px 6px;border-radius:4px;
+  backdrop-filter:blur(4px);
+}
+.card-body{padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:4px}
+.card-title{
+  font-size:0.82rem;font-weight:700;line-height:1.3;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  color:var(--text);
+}
+.card-author{font-size:0.74rem;color:var(--text2);text-decoration:none;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:block}
+.card-author:hover{color:var(--sc-orange)}
+.card-stats{display:flex;gap:8px;margin-top:2px}
+.card-stat{display:flex;align-items:center;gap:3px;font-size:0.68rem;color:var(--text3)}
+.card-actions{
+  display:flex;gap:6px;padding:8px 10px 10px;
+}
+.btn-preview{
+  flex:1;background:var(--bg3);border:1px solid var(--border);
+  color:var(--text2);border-radius:8px;padding:7px 0;
+  font-family:'Rubik',sans-serif;font-size:0.74rem;font-weight:600;
+  cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.btn-preview:hover{border-color:var(--sc-orange);color:var(--sc-orange)}
+.btn-dl{
+  flex:1;background:var(--sc-orange);border:none;color:#fff;
+  border-radius:8px;padding:7px 0;
+  font-family:'Rubik',sans-serif;font-size:0.74rem;font-weight:600;
+  cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.btn-dl:hover{background:var(--sc-orange2)}
+.btn-dl:disabled{opacity:0.6;cursor:not-allowed}
+
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;visibility:hidden;transition:all 0.25s;backdrop-filter:blur(6px);
+}
+.modal-overlay.open{opacity:1;visibility:visible}
+.modal-box{
+  background:var(--bg2);border:1px solid var(--border);border-radius:20px;
+  width:100%;max-width:440px;overflow:hidden;
+  transform:scale(0.92);transition:transform 0.25s;box-shadow:0 24px 80px rgba(0,0,0,0.7);
+}
+.modal-overlay.open .modal-box{transform:scale(1)}
+.modal-header-wrap{position:relative;overflow:hidden}
+.modal-thumb{width:100%;height:180px;object-fit:cover;display:block}
+.modal-thumb-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 30%,var(--bg2));
+}
+.modal-header-info{position:absolute;bottom:14px;left:16px;right:16px}
+.modal-title{font-size:1rem;font-weight:700;line-height:1.3;margin-bottom:4px}
+.modal-author-link{font-size:0.8rem;color:var(--sc-orange);text-decoration:none}
+.modal-author-link:hover{text-decoration:underline}
+.modal-body{padding:16px}
+.modal-player-label{font-size:0.75rem;color:var(--text3);font-weight:600;letter-spacing:0.05em;margin-bottom:8px;text-transform:uppercase}
+.modal-iframe-wrap{
+  background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;position:relative;
+}
+.player-svg-bg{width:100%;display:block}
+.modal-iframe{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  border:none;opacity:0;transition:opacity 0.4s;
+}
+.modal-iframe.loaded{opacity:1}
+.modal-actions{display:flex;gap:10px;margin-top:14px}
+.modal-btn-dl{
+  flex:1;background:var(--sc-orange);border:none;color:#fff;
+  border-radius:10px;padding:12px 0;
+  font-family:'Rubik',sans-serif;font-size:0.9rem;font-weight:700;
+  cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.modal-btn-dl:hover{background:var(--sc-orange2)}
+.modal-btn-dl:disabled{opacity:0.6;cursor:not-allowed}
+.modal-btn-close{
+  background:var(--bg3);border:1px solid var(--border);color:var(--text2);
+  border-radius:10px;padding:12px 18px;
+  font-family:'Rubik',sans-serif;font-size:0.9rem;font-weight:600;
+  cursor:pointer;transition:all 0.2s;
+}
+.modal-btn-close:hover{border-color:var(--text2);color:var(--text)}
+
+.skeleton-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+}
+.skeleton-thumb{width:100%;aspect-ratio:1/1;background:var(--bg3);animation:shimmer 1.4s infinite}
+.skeleton-body{padding:12px}
+.skeleton-line{height:9px;background:var(--bg3);border-radius:5px;margin-bottom:7px;animation:shimmer 1.4s infinite}
+.skeleton-line.w60{width:60%}
+.skeleton-line.w40{width:40%}
+@keyframes shimmer{0%,100%{opacity:0.5}50%{opacity:1}}
+
+.error-msg{text-align:center;padding:48px 20px;color:var(--text2)}
+.error-msg .err-icon{font-size:2.5rem;margin-bottom:12px}
+.error-msg p{font-size:0.95rem}
+.empty-state{text-align:center;padding:64px 20px;color:var(--text3)}
+.empty-state svg{opacity:0.4;margin-bottom:16px}
+.empty-state p{font-size:1rem;font-weight:500}
+
+footer{
+  background:var(--bg2);border-top:1px solid var(--border);
+  padding:36px 24px 22px;
+}
+.footer-top{
+  display:flex;gap:32px;flex-wrap:wrap;max-width:960px;margin:0 auto 28px;
+  align-items:flex-start;
+}
+.footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.footer-logo{width:34px;height:34px;border-radius:8px}
+.footer-name{font-size:1.15rem;font-weight:800;color:var(--text)}
+.footer-name span{color:var(--sc-orange)}
+.footer-desc{font-size:0.82rem;color:var(--text3);line-height:1.6;max-width:280px}
+.footer-social-section{margin-top:26px}
+.footer-social-label{font-size:0.78rem;font-weight:700;letter-spacing:0.06em;color:var(--text2);margin-bottom:12px;text-transform:uppercase}
+.footer-socials{display:flex;gap:8px;flex-wrap:wrap}
+.social-btn{
+  display:flex;align-items:center;gap:7px;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:9px;padding:8px 12px;
+  color:var(--text2);text-decoration:none;font-size:0.8rem;font-weight:500;
+  transition:all 0.2s;
+}
+.social-btn:hover{border-color:var(--sc-orange);color:var(--sc-orange);background:var(--card)}
+.footer-bottom{
+  text-align:center;padding-top:18px;border-top:1px solid var(--border);
+  font-size:0.78rem;color:var(--text3);max-width:960px;margin:0 auto;
+}
+
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:500;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:12px;padding:12px 18px;
+  font-size:0.85rem;font-weight:500;color:var(--text);
+  box-shadow:0 8px 30px rgba(0,0,0,0.4);
+  display:flex;align-items:center;gap:8px;
+  transform:translateY(80px);opacity:0;
+  transition:all 0.3s cubic-bezier(.4,0,.2,1);
+  max-width:300px;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success .toast-dot{background:#22c55e}
+.toast.error .toast-dot{background:#ef4444}
+.toast.info .toast-dot{background:var(--sc-orange)}
+.toast-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+@media(max-width:480px){
+  .search-hero h1{font-size:1.5rem}
+  #search-btn{padding:0 14px}
+  .search-btn-text{display:none}
+  .modal-box{max-width:100%}
+  .cards-grid{gap:10px}
+  .card-body{padding:8px 10px}
+}
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="loading-notes">
+    <div class="note-wrap">
+      <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+        <ellipse cx="9" cy="30" rx="9" ry="6" fill="#ff5500" opacity="0.9"/>
+        <rect x="17" y="4" width="3" height="26" rx="1.5" fill="#ff5500"/>
+        <rect x="17" y="4" width="11" height="3" rx="1.5" fill="#ff7700"/>
+      </svg>
+    </div>
+    <div class="note-wrap">
+      <svg width="36" height="40" viewBox="0 0 36 40" fill="none">
+        <ellipse cx="9" cy="34" rx="9" ry="6" fill="#ff6622" opacity="0.85"/>
+        <ellipse cx="27" cy="30" rx="9" ry="6" fill="#ff5500" opacity="0.85"/>
+        <rect x="17" y="4" width="3" height="30" rx="1.5" fill="#ff5500"/>
+        <rect x="35" y="0" width="3" height="30" rx="1.5" fill="#ff7700"/>
+        <rect x="17" y="4" width="21" height="3" rx="1.5" fill="#ff8833"/>
+      </svg>
+    </div>
+    <div class="note-wrap">
+      <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+        <ellipse cx="9" cy="30" rx="9" ry="6" fill="#ff7700" opacity="0.9"/>
+        <rect x="17" y="4" width="3" height="26" rx="1.5" fill="#ff7700"/>
+        <rect x="17" y="4" width="11" height="3" rx="1.5" fill="#ffaa44"/>
+      </svg>
+    </div>
+    <div class="note-wrap">
+      <svg width="36" height="40" viewBox="0 0 36 40" fill="none">
+        <ellipse cx="9" cy="34" rx="9" ry="6" fill="#ff5500" opacity="0.85"/>
+        <ellipse cx="27" cy="30" rx="9" ry="6" fill="#ff6622" opacity="0.85"/>
+        <rect x="17" y="4" width="3" height="30" rx="1.5" fill="#ff5500"/>
+        <rect x="35" y="0" width="3" height="30" rx="1.5" fill="#ff7700"/>
+        <rect x="17" y="4" width="21" height="3" rx="1.5" fill="#ff8833"/>
+      </svg>
+    </div>
+    <div class="note-wrap">
+      <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+        <ellipse cx="9" cy="30" rx="9" ry="6" fill="#ff5500" opacity="0.9"/>
+        <rect x="17" y="4" width="3" height="26" rx="1.5" fill="#ff5500"/>
+        <rect x="17" y="4" width="11" height="3" rx="1.5" fill="#ff7700"/>
+      </svg>
+    </div>
+  </div>
+  <div class="loading-text">BotzSC</div>
+  <div class="loading-sub">Memuat pengalaman musik terbaik...</div>
+</div>
+
+<div class="side-overlay" id="sideOverlay"></div>
+
+<nav class="side-menu" id="sideMenu">
+  <div class="side-menu-nav">
+    <a href="#footer" onclick="closeSideMenu()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <circle cx="9" cy="9" r="7.5" stroke="#ff5500" stroke-width="1.5"/>
+        <line x1="9" y1="7" x2="9" y2="13" stroke="#ff5500" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="9" cy="5.5" r="0.8" fill="#ff5500"/>
+      </svg>
+      Tentang
+    </a>
+    <a href="https://riskynd.eu.org" target="_blank">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <circle cx="9" cy="7" r="3.5" stroke="#ff5500" stroke-width="1.5"/>
+        <path d="M2 16c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#ff5500" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Author
+    </a>
+    <a href="https://riskynd.eu.org/donate" target="_blank">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M9 15s-7-4.5-7-9a5 5 0 0 1 7-4.58A5 5 0 0 1 16 6c0 4.5-7 9-7 9z" stroke="#ff5500" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      Donasi
+    </a>
+  </div>
+</nav>
+
+<header>
+  <svg class="header-bg-svg" viewBox="0 0 1200 62" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="hbg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#0d0d0f"/>
+        <stop offset="100%" stop-color="#16161a"/>
+      </linearGradient>
+      <radialGradient id="hglow" cx="80%" cy="50%" r="40%">
+        <stop offset="0%" stop-color="#ff5500" stop-opacity="0.08"/>
+        <stop offset="100%" stop-color="#ff5500" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="1200" height="62" fill="url(#hbg)"/>
+    <rect width="1200" height="62" fill="url(#hglow)"/>
+    <path d="M0 50 Q200 20 400 45 T800 38 T1200 50" stroke="#ff5500" stroke-opacity="0.07" stroke-width="1.5" fill="none"/>
+    <path d="M0 58 Q300 35 600 55 T1200 48" stroke="#ff7700" stroke-opacity="0.05" stroke-width="1" fill="none"/>
+    <circle cx="1100" cy="20" r="60" fill="#ff5500" fill-opacity="0.04"/>
+    <circle cx="80" cy="50" r="40" fill="#ff7700" fill-opacity="0.04"/>
+  </svg>
+  <a href="#" class="header-left">
+    <img src="https://cdn-icons-png.flaticon.com/512/145/145809.png" alt="BotzSC Logo" class="header-logo-img">
+    <span class="header-brand">Botz<span>SC</span></span>
+  </a>
+  <div class="header-right">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Buka menu">
+      <svg class="hamburger-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line id="hline1" x1="3" y1="6" x2="21" y2="6" stroke="#f0f0f5" stroke-width="2" stroke-linecap="round"/>
+        <line id="hline2" x1="3" y1="12" x2="21" y2="12" stroke="#f0f0f5" stroke-width="2" stroke-linecap="round"/>
+        <line id="hline3" x1="3" y1="18" x2="21" y2="18" stroke="#f0f0f5" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="search-section">
+    <div class="search-hero">
+      <h1>Cari & Unduh Lagu<br><span>SoundCloud</span> Favoritmu</h1>
+      <p>Temukan jutaan track dari SoundCloud, preview dan download gratis</p>
+    </div>
+    <div class="search-bar-wrap">
+      <span class="search-icon-wrap">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.8"/>
+          <line x1="11.5" y1="11.5" x2="16" y2="16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <input type="text" id="search-input" placeholder="Cari judul lagu, artis..." autocomplete="off" maxlength="200">
+      <button id="search-btn">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <circle cx="6.5" cy="6.5" r="4.5" stroke="#fff" stroke-width="1.7"/>
+          <line x1="10" y1="10" x2="14" y2="14" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+        <span class="search-btn-text">Cari</span>
+      </button>
+    </div>
+  </section>
+
+  <div id="results-area"></div>
+</main>
+
+<footer id="footer">
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand">
+        <img src="https://cdn-icons-png.flaticon.com/512/145/145809.png" alt="BotzSC" class="footer-logo">
+        <span class="footer-name">Botz<span>SC</span></span>
+      </div>
+      <p class="footer-desc">Platform pencarian dan pengunduhan lagu SoundCloud yang cepat, mudah, dan gratis. Nikmati musik tanpa batas bersama BotzSC.</p>
+      <div class="footer-social-section">
+        <div class="footer-social-label">Terhubung dengan kami</div>
+        <div class="footer-socials">
+          <a href="https://riskynd.eu.org" target="_blank" class="social-btn" title="Author">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Author
+          </a>
+          <a href="https://instagram.com/iikyynd" target="_blank" class="social-btn" title="Instagram">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect x="2" y="2" width="12" height="12" rx="3.5" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="12" cy="4" r="0.8" fill="currentColor"/>
+            </svg>
+            Instagram
+          </a>
+          <a href="https://tiktok.com/@riskynd.eu.org" target="_blank" class="social-btn" title="TikTok">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 2c0 2 1.5 3 3 3v2c-1.2 0-2.3-.4-3-1v5a4 4 0 1 1-2-3.46V9.6A2 2 0 1 0 10 12V2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            </svg>
+            TikTok
+          </a>
+          <a href="https://whatsapp.com/channel/0029VbBjxQl8qIzmg51J5W3x" target="_blank" class="social-btn" title="WhatsApp">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1.5A6.5 6.5 0 0 0 2.18 11.1L1.5 14.5l3.5-.68A6.5 6.5 0 1 0 8 1.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M5.5 7.5c.5 1 1.5 2 2.5 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 BotzAku. All rights reserved</div>
+</footer>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-header-wrap">
+      <img src="" alt="" class="modal-thumb" id="modalThumb">
+      <div class="modal-thumb-overlay"></div>
+      <div class="modal-header-info">
+        <div class="modal-title" id="modalTitle"></div>
+        <a href="#" class="modal-author-link" id="modalAuthorLink" target="_blank"></a>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-player-label">Preview Lagu</div>
+      <div class="modal-iframe-wrap" style="height:80px;position:relative">
+        <svg class="player-svg-bg" viewBox="0 0 440 80" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%">
+          <defs>
+            <linearGradient id="pg" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#1e1e24"/>
+              <stop offset="100%" stop-color="#222228"/>
+            </linearGradient>
+          </defs>
+          <rect width="440" height="80" fill="url(#pg)" rx="12"/>
+          <g opacity="0.18">
+            <rect x="20" y="30" width="3" height="20" rx="1.5" fill="#ff5500"/>
+            <rect x="28" y="22" width="3" height="36" rx="1.5" fill="#ff5500"/>
+            <rect x="36" y="28" width="3" height="24" rx="1.5" fill="#ff5500"/>
+            <rect x="44" y="18" width="3" height="44" rx="1.5" fill="#ff5500"/>
+            <rect x="52" y="32" width="3" height="16" rx="1.5" fill="#ff5500"/>
+            <rect x="60" y="25" width="3" height="30" rx="1.5" fill="#ff5500"/>
+            <rect x="68" y="35" width="3" height="10" rx="1.5" fill="#ff5500"/>
+            <rect x="76" y="20" width="3" height="40" rx="1.5" fill="#ff5500"/>
+          </g>
+          <text x="220" y="44" text-anchor="middle" fill="#606070" font-size="12" font-family="Rubik,sans-serif">Memuat player...</text>
+        </svg>
+        <iframe id="modalIframe" class="modal-iframe" src="" scrolling="no" allow="autoplay"></iframe>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn-dl" id="modalDlBtn">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2v8M5 7l3 3 3-3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12h12" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Unduh
+        </button>
+        <button class="modal-btn-close" id="modalCloseBtn">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span class="toast-dot"></span>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+const API_SEARCH = q => `https://host.optikl.ink/soundcloud/search?query=${encodeURIComponent(q)}`;
+const API_DL = url => `https://host.optikl.ink/soundcloud/download?url=${encodeURIComponent(url)}`;
+
+const loadingScreen = document.getElementById('loading-screen');
+const sideMenu = document.getElementById('sideMenu');
+const sideOverlay = document.getElementById('sideOverlay');
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const hline1 = document.getElementById('hline1');
+const hline2 = document.getElementById('hline2');
+const hline3 = document.getElementById('hline3');
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('search-btn');
+const resultsArea = document.getElementById('results-area');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalThumb = document.getElementById('modalThumb');
+const modalTitle = document.getElementById('modalTitle');
+const modalAuthorLink = document.getElementById('modalAuthorLink');
+const modalIframe = document.getElementById('modalIframe');
+const modalDlBtn = document.getElementById('modalDlBtn');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+const toast = document.getElementById('toast');
+const toastMsg = document.getElementById('toastMsg');
+
+let menuOpen = false;
+let toastTimer = null;
+
+window.addEventListener('load', () => {
+  setTimeout(() => { loadingScreen.classList.add('hide'); }, 1800);
+});
+
+function setHamburgerX(isX) {
+  if (isX) {
+    hline1.setAttribute('x1','5'); hline1.setAttribute('y1','5');
+    hline1.setAttribute('x2','19'); hline1.setAttribute('y2','19');
+    hline2.style.opacity = '0';
+    hline3.setAttribute('x1','19'); hline3.setAttribute('y1','5');
+    hline3.setAttribute('x2','5'); hline3.setAttribute('y2','19');
+  } else {
+    hline1.setAttribute('x1','3'); hline1.setAttribute('y1','6');
+    hline1.setAttribute('x2','21'); hline1.setAttribute('y2','6');
+    hline2.style.opacity = '1';
+    hline3.setAttribute('x1','3'); hline3.setAttribute('y1','18');
+    hline3.setAttribute('x2','21'); hline3.setAttribute('y2','18');
+  }
+}
+
+function openSideMenu() {
+  menuOpen = true;
+  sideMenu.classList.add('open');
+  sideOverlay.classList.add('open');
+  setHamburgerX(true);
+}
+
+function closeSideMenu() {
+  menuOpen = false;
+  sideMenu.classList.remove('open');
+  sideOverlay.classList.remove('open');
+  setHamburgerX(false);
+}
+
+hamburgerBtn.addEventListener('click', () => menuOpen ? closeSideMenu() : openSideMenu());
+sideOverlay.addEventListener('click', closeSideMenu);
+
+function showToast(msg, type = 'info') {
+  clearTimeout(toastTimer);
+  toastMsg.textContent = msg;
+  toast.className = `toast show ${type}`;
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
+function renderSkeletons(n = 6) {
+  let h = '';
+  for (let i = 0; i < n; i++) {
+    h += `<div class="skeleton-card">
+      <div class="skeleton-thumb"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line w60"></div>
+        <div class="skeleton-line w40"></div>
+      </div>
+    </div>`;
+  }
+  resultsArea.innerHTML = `<div class="cards-grid">${h}</div>`;
+}
+
+function renderResults(tracks) {
+  if (!tracks || tracks.length === 0) {
+    resultsArea.innerHTML = `<div class="empty-state">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <circle cx="28" cy="28" r="26" stroke="#606070" stroke-width="2"/>
+        <path d="M20 28c2-5 14-5 16 0" stroke="#606070" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="21" cy="22" r="2" fill="#606070"/>
+        <circle cx="35" cy="22" r="2" fill="#606070"/>
+      </svg>
+      <p>Tidak ada hasil ditemukan</p>
+    </div>`;
+    return;
+  }
+  const countEl = `<div class="results-header"><span class="results-count">Ditemukan <strong>${tracks.length}</strong> lagu</span></div>`;
+  const cards = tracks.map(t => `
+    <div class="song-card">
+      <div class="card-thumb-wrap">
+        <img class="card-thumb" src="${t.thumbnail}" alt="${escHtml(t.title)}" loading="lazy" onerror="this.src='https://cdn-icons-png.flaticon.com/512/145/145809.png'">
+        <div class="card-thumb-overlay"></div>
+        <span class="card-duration">${t.duration}</span>
+        <span class="card-play-count">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polygon points="2,1 9,5 2,9" fill="#fff"/></svg>
+          ${t.play_count}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${escHtml(t.title)}</div>
+        <a class="card-author" href="${t.author.url}" target="_blank">${escHtml(t.author.name)}</a>
+        <div class="card-stats">
+          <span class="card-stat">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 9S1 6 1 3.5a2.5 2.5 0 0 1 4.5-1.5A2.5 2.5 0 0 1 10 3.5C10 6 5.5 9 5.5 9z" stroke="#606070" stroke-width="1.1"/></svg>
+            ${t.like_count}
+          </span>
+          <span class="card-stat">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 2v5M3 5l2.5 2 2.5-2" stroke="#606070" stroke-width="1.1" stroke-linecap="round"/><path d="M1.5 9h8" stroke="#606070" stroke-width="1.1" stroke-linecap="round"/></svg>
+            ${t.download_count}
+          </span>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-preview" onclick="openModal(event,'${encodeURIComponent(t.url)}','${encodeURIComponent(t.title)}','${encodeURIComponent(t.author.name)}','${encodeURIComponent(t.author.url)}','${encodeURIComponent(t.thumbnail)}')">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polygon points="2,1 11,6 2,11" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+          Preview
+        </button>
+        <button class="btn-dl" onclick="downloadTrack(event,'${encodeURIComponent(t.url)}','${encodeURIComponent(t.title)}')">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.5v6M3.5 6l2.5 2 2.5-2" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 10h9" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Unduh
+        </button>
+      </div>
+    </div>
+  `).join('');
+  resultsArea.innerHTML = countEl + `<div class="cards-grid">${cards}</div>`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+async function doSearch() {
+  const q = searchInput.value.trim();
+  if (!q) { showToast('Masukkan kata kunci pencarian', 'error'); return; }
+  searchBtn.disabled = true;
+  searchBtn.querySelector('.search-btn-text').textContent = 'Mencari...';
+  renderSkeletons(6);
+  try {
+    const res = await fetch(API_SEARCH(q));
+    if (!res.ok) throw new Error('Gagal mengambil data');
+    const data = await res.json();
+    renderResults(Array.isArray(data) ? data : []);
+  } catch (e) {
+    resultsArea.innerHTML = `<div class="error-msg"><div class="err-icon">⚠️</div><p>Gagal memuat hasil: ${e.message}</p></div>`;
+    showToast('Pencarian gagal', 'error');
+  } finally {
+    searchBtn.disabled = false;
+    searchBtn.querySelector('.search-btn-text').textContent = 'Cari';
+  }
+}
+
+searchBtn.addEventListener('click', doSearch);
+searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+let currentDlUrl = '';
+function openModal(e, urlEnc, titleEnc, authorEnc, authorUrlEnc, thumbEnc) {
+  e.stopPropagation();
+  const url = decodeURIComponent(urlEnc);
+  const title = decodeURIComponent(titleEnc);
+  const author = decodeURIComponent(authorEnc);
+  const authorUrl = decodeURIComponent(authorUrlEnc);
+  const thumb = decodeURIComponent(thumbEnc);
+  currentDlUrl = url;
+  modalThumb.src = thumb;
+  modalTitle.textContent = title;
+  modalAuthorLink.textContent = author;
+  modalAuthorLink.href = authorUrl;
+  modalIframe.classList.remove('loaded');
+  modalIframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false`;
+  modalIframe.onload = () => modalIframe.classList.add('loaded');
+  modalOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  modalOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+  modalIframe.src = '';
+  currentDlUrl = '';
+}
+
+modalCloseBtn.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+
+modalDlBtn.addEventListener('click', async () => {
+  if (!currentDlUrl) return;
+  await downloadTrack(null, encodeURIComponent(currentDlUrl), encodeURIComponent(modalTitle.textContent));
+});
+
+async function downloadTrack(e, urlEnc, titleEnc) {
+  if (e) e.stopPropagation();
+  const url = decodeURIComponent(urlEnc);
+  const title = decodeURIComponent(titleEnc);
+  showToast('Mengambil link download...', 'info');
+  const btn = e ? e.currentTarget : modalDlBtn;
+  btn.disabled = true;
+  try {
+    const res = await fetch(API_DL(url));
+    if (!res.ok) throw new Error('Gagal');
+    const data = await res.json();
+    if (data.audio_url) {
+      const a = document.createElement('a');
+      a.href = data.audio_url;
+      a.download = (data.title || title) + '.mp3';
+      a.target = '_blank';
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Download dimulai!', 'success');
+    } else {
+      throw new Error('URL tidak ditemukan');
+    }
+  } catch (err) {
+    showToast('Gagal download: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
